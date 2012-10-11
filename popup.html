@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="./bootstrap.css">
+        <style>
+            body
+            {
+                min-width: 420px;
+                overflow-x: hidden;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+            }
+            input, textarea { width: 420px; }
+            input#save { font-weight: bold; width: auto; }
+            img {
+                max-width: 100%;
+            }
+            div#loading{
+                position: absolute;
+                top:20px;
+                left:100px;
+                width: 100px;
+                height:100px;
+                margin: 0px auto;
+            }
+            div#esc{
+                position: absolute;
+                top:50px;
+                left:200px;
+            }
+						div#link{
+							position:absolute;
+							left:20px;
+							top:20px;
+							margin:0 auto;
+						}
+        </style>
+		<script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js">
+		</script>
+        <script type="text/javascript" src="./jquery.xdomainajax.js"></script>
+        <script>
+            var root_url = "http://yan.yuantian.info/"
+            // This callback function is called when the content script has been
+            // injected and returned its results
+            function onPageInfo(o)
+            {
+                document.getElementById("title").value = o.title;
+                document.getElementById("url").value = o.url;
+                document.getElementById("summary").innerText = o.summary;
+            }
+
+            // POST the data to the server using XMLHttpRequest
+            function addBookmark(f)
+            {
+ 				$("#loading").show();
+                $("#esc").show();
+                $('#addbookmark').hide();
+                var url = document.getElementById("url").value;
+					$.ajax({
+                       async:true,
+					   type: "POST",
+					   url: root_url + "/notes",
+					   data: { url: url},
+                        success: function(ajax_output) {
+                            $("#loading").hide();
+                            $("#esc").hide();
+                            window.close();
+                        }
+					}).done(function( msg ) {
+                        $("#loading").hide();
+                        $("#esc").hide();
+					    window.close();
+					});
+            }
+
+            // Call the getPageInfo function in the background page, passing in
+            // our onPageInfo function as the callback
+            window.onload = function()
+            {
+                $("#loading").hide();
+                $("#addbookmark").hide();
+                $("#status").hide()
+                $("#login").hide()
+                $("#esc").hide()
+                var response = '';
+                    $.ajax({ type: "GET",
+                        url: root_url + "/abouts/session",
+                        async: false,
+                        success : function(text)
+                        {
+                            response = text;
+                        }
+                    });
+                $("#login").html(response)
+
+                status=$.trim($("#status").html())
+                if (status=="success") {
+
+                    $("#addbookmark").show()
+
+                }
+                else
+                {
+                    $("#link").html("<a class='btn btn-info btn-large' href=" + root_url +"/auth/facebook target='_blank'>Sign in</a>")
+                }
+                var bg = chrome.extension.getBackgroundPage();
+                bg.getPageInfo(onPageInfo);
+            }
+        </script>
+    </head>
+    <body>
+        <div class="row"></div>
+            <div id="login">
+            </div>
+            <div id="loading" class="span3"><img src="./loading.gif" /><p><b>Loading...</b></p></div>
+            <div id="esc" class="span6"><a class="btn" href="#" onclick="window.close()">dismiss</a></div>
+            <div id="link"></div>
+			<div id="addbookmark">
+				<form id="addbookmark" onsubmit="addBookmark(this);return false;">
+                    <label for="title"><b>Title</b></label>
+                    <input type="text" id="title" name="title" size="50" value="" />
+    	        	<label for="url"><b>Link</b></label>
+    	        	<input type="text" id="url" name="url" size="50" value="" />
+    	        	<input id="save" class="btn primary" type="submit" value="Save to Yan" />
+	           </form>
+			</div>
+    </body>
+</html>
